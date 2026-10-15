@@ -95,6 +95,104 @@
   --shadow-pop: 0 1px 2px oklch(0% 0 0 / .3), 0 16px 40px -8px oklch(0% 0 0 / .55);
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: oklch(98.8% 0.002 26);
+  --surface: oklch(100% 0 0);
+  --rail: oklch(100% 0 0);
+  --sunken: oklch(97.5% 0.005 26);
+  --hover: oklch(96.8% 0.015 26);
+  --line: oklch(91.8% 0.008 26);
+  --line-strong: oklch(84.5% 0.015 26);
+  --ink: oklch(17.5% 0.012 26);
+  --ink-2: oklch(36% 0.012 26);
+  --muted: oklch(52% 0.012 26);
+  --accent: oklch(52% 0.23 26);
+  --accent-hover: oklch(45% 0.23 26);
+  --accent-soft: oklch(96.8% 0.028 26);
+  --on-accent: oklch(100% 0 0);
+  --focus: oklch(52% 0.23 26 / .28);
+
+  --info: oklch(47.5% 0.13 255);     --info-soft: oklch(95.4% 0.024 255);
+  --warning: oklch(50% 0.105 65);    --warning-soft: oklch(95.6% 0.045 82);
+  --danger: oklch(52% 0.23 26);      --danger-soft: oklch(96.8% 0.028 26);
+  --success: oklch(47.5% 0.1 152);   --success-soft: oklch(95.3% 0.034 152);
+  --verify: oklch(48% 0.13 300);     --verify-soft: oklch(95.6% 0.026 300);
+  --neutral: var(--ink-2);           --neutral-soft: oklch(94.4% 0 0);
+
+  --shadow-pop: 0 1px 3px oklch(52% 0.23 26 / .08), 0 14px 36px -8px oklch(18% 0 0 / .16);
+}
+
+/* Theme Toggle Button & Segmented Controls */
+.theme-toggle-btn {
+  transition: transform .2s var(--ease), background-color .15s var(--ease), color .15s var(--ease);
+}
+.theme-toggle-btn:hover {
+  transform: rotate(15deg) scale(1.06);
+}
+.theme-icon-sun {
+  color: #f59e0b;
+}
+.theme-icon-moon {
+  color: var(--muted);
+}
+.theme-toggle-btn:hover .theme-icon-moon {
+  color: var(--accent);
+}
+
+.popover-theme-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sunken);
+}
+.theme-toggle-pills {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.theme-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color .15s var(--ease), color .15s var(--ease);
+}
+.theme-pill:hover {
+  color: var(--ink);
+}
+.theme-pill.active {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* Brand mark styling with RIQ logo */
+.brand-mark-frame {
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+}
+.brand:hover .brand-mark-frame {
+  transform: scale(1.05);
+}
+:root[data-theme="dark"] .brand-mark-frame,
+:root:not([data-theme="light"]) .brand-mark-frame {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 2px 6px rgba(0, 0, 0, 0.45) !important;
+}
+
 /* ---------- Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: 88px; }

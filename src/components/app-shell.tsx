@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSelectedLayoutSegment } from "next/navigation";
 import { FormEvent, ReactNode, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowUpRight, Bell, BriefcaseBusiness, ChevronDown, FileBarChart2, Home, Inbox, LogIn, LogOut, PanelLeftClose, PanelLeftOpen, Search, Send, Settings, X } from "lucide-react";
+import { ArrowUpRight, Bell, BriefcaseBusiness, ChevronDown, FileBarChart2, Home, Inbox, Laptop, LogIn, LogOut, Moon, PanelLeftClose, PanelLeftOpen, Search, Send, Settings, Sun, X } from "lucide-react";
 import { BrandMark } from "./brand-mark";
 import { ToastProvider, useToast } from "./toast";
 import { api } from "@/lib/api/endpoints";
@@ -42,7 +42,7 @@ function Shell({ children }: { children: ReactNode }) {
       <a className="skip-link" href="#main">Skip to content</a>
       <aside className="sidebar" aria-label="Main navigation">
         <Link className="brand" href="/" aria-label="RESOLVEIQ home">
-          <BrandMark />
+          <BrandMark size={34} />
           <span className="brand-text"><strong>RESOLVEIQ</strong><small>Incident &amp; resolution desk</small></span>
         </Link>
         <Suspense fallback={<NavList active={undefined} collapsed={sidebarCollapsed} />}>
@@ -60,6 +60,7 @@ function Shell({ children }: { children: ReactNode }) {
         <Link className="brand brand-compact" href="/" aria-label="RESOLVEIQ home"><BrandMark size={28} /><strong>RESOLVEIQ</strong></Link>
         <GlobalSearch />
         <div className="topbar-actions">
+          <ThemeToggle />
           <NotificationsMenu />
           <AccountMenu />
         </div>
@@ -206,9 +207,63 @@ function NotificationsMenu() {
 const notificationError = (error: ApiError) =>
   error.kind === "not-configured" ? "Notifications appear once RESOLVEIQ is connected." : error.kind === "unauthorized" ? "Sign in to see your notifications." : "Notifications couldn’t be loaded. Try again shortly.";
 
+function ThemeToggle() {
+  const { theme } = usePreferences();
+  const [mounted, setMounted] = useState(false);
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    setMounted(true);
+    const update = () => {
+      if (theme === "system") {
+        const isDark = typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        setResolvedTheme(isDark ? "dark" : "light");
+      } else {
+        setResolvedTheme(theme);
+      }
+    };
+    update();
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [theme]);
+
+  const toggle = () => {
+    const next = resolvedTheme === "dark" ? "light" : "dark";
+    setPreference("theme", next);
+  };
+
+  if (!mounted) {
+    return (
+      <button type="button" className="icon-button theme-toggle-btn" aria-label="Toggle light or dark mode" disabled>
+        <span style={{ width: 18, height: 18, display: "inline-block" }} />
+      </button>
+    );
+  }
+
+  const isDark = resolvedTheme === "dark";
+
+  return (
+    <button
+      type="button"
+      className="icon-button theme-toggle-btn"
+      onClick={toggle}
+      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {isDark ? (
+        <Sun size={18} aria-hidden="true" className="theme-icon-sun" />
+      ) : (
+        <Moon size={18} aria-hidden="true" className="theme-icon-moon" />
+      )}
+    </button>
+  );
+}
+
 function AccountMenu() {
   const { open, setOpen, ref } = usePopover();
   const session = useSession();
+  const { theme } = usePreferences();
   const user = session.state === "ready" ? session.data.user : null;
   const isTest = user?.displayName.toLowerCase().includes("test");
   const displayTitle = isTest ? "Hackathon Operator" : (user?.displayName ?? "Account");
@@ -224,6 +279,35 @@ function AccountMenu() {
       {open && (
         <div id="account-popover" className="popover account-popover" role="region" aria-label="Account">
           {user && <div className="popover-head stacked"><strong>{displayTitle}</strong><span className="muted">{user.email}</span></div>}
+          <div className="popover-theme-selector">
+            <span className="muted small">Mode</span>
+            <div className="theme-toggle-pills" role="radiogroup" aria-label="Appearance">
+              <button
+                type="button"
+                className={`theme-pill ${theme === "light" ? "active" : ""}`}
+                onClick={() => setPreference("theme", "light")}
+                title="Light mode"
+              >
+                <Sun size={13} aria-hidden="true" /><span>Light</span>
+              </button>
+              <button
+                type="button"
+                className={`theme-pill ${theme === "dark" ? "active" : ""}`}
+                onClick={() => setPreference("theme", "dark")}
+                title="Dark mode"
+              >
+                <Moon size={13} aria-hidden="true" /><span>Dark</span>
+              </button>
+              <button
+                type="button"
+                className={`theme-pill ${theme === "system" ? "active" : ""}`}
+                onClick={() => setPreference("theme", "system")}
+                title="Match system"
+              >
+                <Laptop size={13} aria-hidden="true" /><span>System</span>
+              </button>
+            </div>
+          </div>
           <nav className="popover-links" aria-label="Account">
             <Link href="/settings?section=profile" onClick={() => setOpen(false)}>My profile</Link>
             <Link href="/settings?section=preferences" onClick={() => setOpen(false)}>Preferences</Link>

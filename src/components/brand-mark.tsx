@@ -1,13 +1,40 @@
-// RESOLVEIQ route mark: a spine with three nodes, a complaint moving from intake through review to a verified resolution.
-export function BrandMark({ size = 32 }: { size?: number }) {
+"use client";
+
+// RESOLVEIQ Official Brand Mark: Featuring the RIQ monogram logo
+export function BrandMark({ size = 32, className = "" }: { size?: number; className?: string }) {
+  const radius = Math.max(6, Math.round(size * 0.22));
   return (
-    <svg className="brand-mark" width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="8" className="brand-mark-bg" />
-      <path d="M11 8.5v15" className="brand-mark-line" />
-      <path d="M11 16h6.5a4.5 4.5 0 0 0 4.5-4.5V10" className="brand-mark-line" />
-      <circle cx="11" cy="8.5" r="2.4" className="brand-mark-node" />
-      <circle cx="11" cy="23.5" r="2.4" className="brand-mark-node" />
-      <circle cx="22" cy="9" r="3" className="brand-mark-signal" />
-    </svg>
+    <span
+      className={`brand-mark-frame ${className}`.trim()}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: size,
+        height: size,
+        minWidth: size,
+        minHeight: size,
+        borderRadius: `${radius}px`,
+        overflow: "hidden",
+        backgroundColor: "#ffffff",
+        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.08)",
+        flexShrink: 0,
+        position: "relative",
+      }}
+    >
+      <img
+        src="/logo.jpeg"
+        alt="ResolveIQ Logo"
+        width={size}
+        height={size}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+          display: "block",
+        }}
+      />
+    </span>
   );
 }
+
