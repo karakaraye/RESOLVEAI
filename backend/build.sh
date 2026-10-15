@@ -3,5 +3,5 @@
 set -o errexit
 
 pip install -r requirements.txt
-python manage.py collectstatic --no-input
-python manage.py migrate
+python django_manage.py collectstatic --no-input
+python django_manage.py migrate

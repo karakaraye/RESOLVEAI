@@ -56,9 +56,9 @@ RESOLVEIQ (BIIRS) is an intelligent, multi-tenant incident resolution and compla
 ```bash
 cd backend
 pip install -r requirements.txt
-python manage.py migrate
-python manage.py run_stage7_e2e_journey  # Seeds synthetic bank & demo complaints
-python manage.py runserver 8000
+python django_manage.py migrate
+python django_manage.py run_stage7_e2e_journey  # Seeds synthetic bank & demo complaints
+python django_manage.py runserver 8000
 ```
 
 ### 2. Start the Frontend Desk
