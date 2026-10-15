@@ -28,9 +28,9 @@ ALLOW_DEV_AUTH = DEBUG and (os.environ.get("ALLOW_DEV_AUTH", "True").lower() in 
 
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,0.0.0.0").split(",")
+    for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
     if host.strip()
-]
+] or ["*"]
 
 # Application Definition
 INSTALLED_APPS = [
@@ -122,6 +122,10 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
     url = urllib.parse.urlparse(DATABASE_URL)
+    db_options = {}
+    if "supabase.com" in (url.hostname or "") or os.environ.get("DB_SSL_REQUIRE", "").lower() in ("true", "1"):
+        db_options["sslmode"] = "require"
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -131,6 +135,7 @@ if DATABASE_URL:
             "HOST": url.hostname or "127.0.0.1",
             "PORT": str(url.port or 5432),
             "CONN_MAX_AGE": int(os.environ.get("DB_CONN_MAX_AGE", 60)),
+            "OPTIONS": db_options,
         }
     }
 else:
@@ -198,17 +203,18 @@ CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
         "CSRF_TRUSTED_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000"
+        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000,https://*.onrender.com,https://*.vercel.app"
     ).split(",")
     if origin.strip()
 ]
 
 # CORS Configuration
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000"
+        "http://localhost:3000,http://127.0.0.1:3000,https://*.vercel.app"
     ).split(",")
     if origin.strip()
 ]
