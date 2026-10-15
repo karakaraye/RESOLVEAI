@@ -1,0 +1,1 @@
+# ResolveAI Delivery Adapters

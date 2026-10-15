@@ -1,0 +1,75 @@
+{
+  "security": {
+    "tenant_isolation": {
+      "status": "PASSED",
+      "detail": "Strict database-level and queryset-level tenant filtering prevents cross-tenant access.",
+      "tenant_1": "audit-t1-2ebf65",
+      "tenant_2": "audit-t2-a57696"
+    },
+    "maker_checker": {
+      "status": "PASSED",
+      "self_verification_rejected": true,
+      "rejection_message": "You do not have permission to verify complaint outcomes."
+    },
+    "sensitive_data_protection": {
+      "status": "PASSED",
+      "detail": "Template engine blocks all non-allowlisted and prohibited credentials (PAN, PIN, CVV), and scrubs raw card numbers.",
+      "sanitized_output": "Customer card is **** **** **** 4444 and pin: [REDACTED] on device."
+    },
+    "idempotency_protection": {
+      "status": "PASSED",
+      "cached_replay_verified": true
+    }
+  },
+  "reliability": {
+    "outbox_durability": {
+      "status": "PASSED",
+      "message_id": "17887cb4-a1bd-4337-a582-cdc610925202",
+      "persistence": "DURABLE_IN_POSTGRES"
+    },
+    "concurrency_reopen_cancel": {
+      "status": "PASSED",
+      "complaint_status": "REOPENED",
+      "communication_status": "CANCELLED",
+      "cancellation_reason": "Customer called stating ATM issue was not resolved"
+    },
+    "retry_exhaustion": {
+      "status": "PASSED",
+      "max_retries": 3,
+      "final_status": "FAILED"
+    }
+  },
+  "performance": {
+    "complaint_list_query_ms": 127.46,
+    "complaint_detail_query_ms": 301.03,
+    "reports_generation_latencies_ms": {
+      "overview": 1140.98,
+      "complaint-volumes": 638.21,
+      "recurring-issues": 755.25,
+      "resolution-performance": 754.86,
+      "team-response-times": 748.02,
+      "overdue-cases": 882.87,
+      "incident-trends": 757.83
+    },
+    "mean_report_generation_ms": 811.15,
+    "embedding_generation_ms": 1.02
+  },
+  "compliance": {
+    "append_only_audit_log": {
+      "status": "PASSED",
+      "audit_event_logged": true,
+      "event_id": "cf1e2824-12da-4b21-897b-4e9db960f2f5",
+      "created_at": "2026-10-15 09:48:02.355006+00:00"
+    },
+    "template_version_history": {
+      "status": "PASSED",
+      "versions_found": 2,
+      "template_code": "RESOLUTION_NOTICE"
+    },
+    "pii_masking": {
+      "status": "PASSED",
+      "recipient_masked": "+234801***4567",
+      "pii_leak_in_plaintext": false
+    }
+  }
+}

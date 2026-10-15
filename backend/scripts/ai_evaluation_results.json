@@ -1,0 +1,58 @@
+{
+  "dataset_size": 30,
+  "classification": {
+    "accuracy": 0.8,
+    "category_metrics": {
+      "ACCOUNT_SERVICES": {
+        "precision": 1.0,
+        "recall": 0.5,
+        "f1": 0.6666666666666666,
+        "count": 6
+      },
+      "BILL_PAYMENTS": {
+        "precision": 0.8333333333333334,
+        "recall": 0.8333333333333334,
+        "f1": 0.8333333333333334,
+        "count": 6
+      },
+      "CARDS_ATM": {
+        "precision": 0.5454545454545454,
+        "recall": 1.0,
+        "f1": 0.7058823529411764,
+        "count": 6
+      },
+      "FRAUD_SECURITY": {
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "f1": 0.8,
+        "count": 6
+      },
+      "TRANSFERS": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "count": 6
+      }
+    },
+    "latency_ms_mean": 0.02229333573874707,
+    "latency_ms_p95": 0.030800001695752144
+  },
+  "retrieval": {
+    "feature_hashing": {
+      "precision_at_3": 0.3888888888888889,
+      "mrr": 0.6275396825396825
+    },
+    "sentence_transformer": null,
+    "comparison_notes": "Deterministic feature hashing provides 384-d offline vectors suitable for cosine search when ML libraries are unavailable. Semantic model provides denser semantic abstraction without lexical token overlap."
+  },
+  "incident_correlation": {
+    "incident_pairs_evaluated": 435,
+    "true_cluster_hits": 0,
+    "missed_patterns": 13,
+    "false_positives": 0
+  },
+  "grounding": {
+    "grounding_rate": 1.0,
+    "unsupported_assertions": 0
+  }
+}
