@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSelectedLayoutSegment } from "next/navigation";
 import { FormEvent, ReactNode, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowUpRight, Bell, BriefcaseBusiness, ChevronDown, FileBarChart2, Home, Inbox, Laptop, LogIn, LogOut, Moon, PanelLeftClose, PanelLeftOpen, Plus, PlusCircle, Search, Send, Settings, Sun, X } from "lucide-react";
+import { ArrowUpRight, Bell, BriefcaseBusiness, ChevronDown, FileBarChart2, Home, Inbox, Laptop, LogIn, LogOut, Moon, PanelLeftClose, PanelLeftOpen, Search, Send, Settings, Sun, X } from "lucide-react";
 import { BrandMark } from "./brand-mark";
 import { ToastProvider, useToast } from "./toast";
 import { api } from "@/lib/api/endpoints";
@@ -45,16 +45,6 @@ function Shell({ children }: { children: ReactNode }) {
           <BrandMark size={34} />
           <span className="brand-text"><strong>RESOLVEIQ</strong><small>Incident &amp; resolution desk</small></span>
         </Link>
-        <div className="sidebar-action-wrap">
-          <Link
-            href="/complaints/new"
-            className="sidebar-new-btn button button-primary"
-            title={sidebarCollapsed ? "Log new complaint" : undefined}
-          >
-            <Plus size={16} aria-hidden="true" />
-            <span className="sidebar-new-text">New Complaint</span>
-          </Link>
-        </div>
         <Suspense fallback={<NavList active={undefined} collapsed={sidebarCollapsed} />}>
           <ActiveNav collapsed={sidebarCollapsed} />
         </Suspense>
@@ -70,14 +60,6 @@ function Shell({ children }: { children: ReactNode }) {
         <Link className="brand brand-compact" href="/" aria-label="RESOLVEIQ home"><BrandMark size={28} /><strong>RESOLVEIQ</strong></Link>
         <GlobalSearch />
         <div className="topbar-actions">
-          <Link
-            href="/complaints/new"
-            className="button button-primary button-small topbar-new-btn"
-            title="Log new complaint for live hackathon demo"
-          >
-            <Plus size={15} aria-hidden="true" />
-            <span className="topbar-new-label">New Complaint</span>
-          </Link>
           <ThemeToggle />
           <NotificationsMenu />
           <AccountMenu />
@@ -125,8 +107,8 @@ function NavList({ active, collapsed }: { active: string | null | undefined; col
 const mobileNavItems = [
   { href: "/", label: "Home", mobileLabel: "Home", icon: Home },
   { href: "/complaints", label: "Complaints", mobileLabel: "Cases", icon: Inbox },
-  { href: "/complaints/new", label: "New Complaint", mobileLabel: "+ New", icon: PlusCircle },
   { href: "/my-cases", label: "My Cases", mobileLabel: "Mine", icon: BriefcaseBusiness },
+  { href: "/forwarded", label: "Forwarded", mobileLabel: "Sent", icon: Send },
   { href: "/reports", label: "Reports", mobileLabel: "Reports", icon: FileBarChart2 },
   { href: "/settings", label: "Settings", mobileLabel: "Settings", icon: Settings },
 ] as const;
