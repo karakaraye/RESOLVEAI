@@ -3,18 +3,13 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import {
-  AlertCircle,
   ArrowRight,
-  Bot,
   CheckCircle2,
   Clock,
   CreditCard,
-  ExternalLink,
-  HelpCircle,
   Landmark,
   Mail,
   MessageSquare,
-  Phone,
   RefreshCw,
   Send,
   ShieldCheck,
@@ -95,85 +90,6 @@ const CHANNELS: ChannelConfig[] = [
   },
 ];
 
-interface QuickScenario {
-  label: string;
-  channel: ChannelId;
-  categoryCode: string;
-  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-  customerName: string;
-  customerPhone: string;
-  customerEmail: string;
-  accountNumber: string;
-  amount: string;
-  transactionRef: string;
-  summary: string;
-  narrative: string;
-  slaHours: number;
-}
-
-const QUICK_SCENARIOS: QuickScenario[] = [
-  {
-    label: "🏧 ATM Failed (₦50,000 Cash Dispense Failure)",
-    channel: "mobile_app",
-    categoryCode: "CARDS_ATM",
-    priority: "CRITICAL",
-    customerName: "Judge Adaeze Okonkwo",
-    customerPhone: "+234 803 456 7890",
-    customerEmail: "adaeze.judge@hackathon.ng",
-    accountNumber: "0123456789",
-    amount: "50000",
-    transactionRef: "ATM-VI-004-DISP-991",
-    summary: "ATM Cash Dispense Failure: ₦50,000 debited without cash disbursement",
-    narrative: "Attempted to withdraw ₦50,000 at Victoria Island Branch ATM 4. Machine counted notes, made mechanical clicking sound, but shutter did not open. Account was debited immediately with SMS alert received.",
-    slaHours: 24,
-  },
-  {
-    label: "💸 Stuck NIP Transfer (₦250,000 Interbank Wire)",
-    channel: "email",
-    categoryCode: "TRANSFERS",
-    priority: "HIGH",
-    customerName: "Judge Babatunde Adeleke",
-    customerPhone: "+234 802 345 6789",
-    customerEmail: "babatunde.judge@hackathon.ng",
-    accountNumber: "0234567890",
-    amount: "250000",
-    transactionRef: "NIP-990023412984-ZENITH-GTB",
-    summary: "NIP Transfer of ₦250,000 debited but beneficiary not credited after 6 hours",
-    narrative: "Initiated an urgent interbank transfer of ₦250,000 to GTBank beneficiary. Sender account was debited, transaction status is stuck in PENDING on NIBSS switch. Beneficiary bank confirmed non-receipt.",
-    slaHours: 24,
-  },
-  {
-    label: "💬 WhatsApp Bot: POS Double Debit (₦18,500)",
-    channel: "whatsapp",
-    categoryCode: "CARDS_ATM",
-    priority: "MEDIUM",
-    customerName: "Judge Chinedu Eze",
-    customerPhone: "+234 807 890 1234",
-    customerEmail: "chinedu.judge@hackathon.ng",
-    accountNumber: "0345678901",
-    amount: "18500",
-    transactionRef: "POS-STANBIC-SPAR-7721",
-    summary: "POS Double Debit at Supermarket: ₦18,500 charged twice for single grocery purchase",
-    narrative: "First attempt at merchant POS showed 'Issuer Timeout / Declined', cashier asked me to swipe again. Second attempt succeeded, but checking my bank alert both transactions of ₦18,500 were debited.",
-    slaHours: 48,
-  },
-  {
-    label: "⚠️ Unauthorized Debit Alert (₦120,000 Online Charge)",
-    channel: "web_portal",
-    categoryCode: "FRAUD_SECURITY",
-    priority: "CRITICAL",
-    customerName: "Judge Fatima Aliyu",
-    customerPhone: "+234 809 123 4567",
-    customerEmail: "fatima.judge@hackathon.ng",
-    accountNumber: "0456789012",
-    amount: "120000",
-    transactionRef: "WEB-PAYSTACK-EXT-44219",
-    summary: "Suspected Unauthorized Card Transaction: ₦120,000 international charge without OTP",
-    narrative: "Received SMS notification for ₦120,000 debit from an unknown online merchant while my physical card was inside my wallet. I did not receive or authorize any 2FA/OTP prompt.",
-    slaHours: 12,
-  },
-];
-
 export function CustomerDisputePortal() {
   const toast = useToast();
   const [activeChannel, setActiveChannel] = useState<ChannelId>("mobile_app");
@@ -196,20 +112,6 @@ export function CustomerDisputePortal() {
   } | null>(null);
 
   const currentChannelConfig = CHANNELS.find((c) => c.id === activeChannel) || CHANNELS[0];
-
-  const applyScenario = (sc: QuickScenario) => {
-    setActiveChannel(sc.channel);
-    setCategoryCode(sc.categoryCode);
-    setCustomerName(sc.customerName);
-    setCustomerPhone(sc.customerPhone);
-    setCustomerEmail(sc.customerEmail);
-    setAccountNumber(sc.accountNumber);
-    setAmount(sc.amount);
-    setTransactionRef(sc.transactionRef);
-    setSummary(sc.summary);
-    setNarrative(sc.narrative);
-    toast(`Preset applied: "${sc.label}"! Click Submit below to send live.`, "info");
-  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -427,31 +329,37 @@ export function CustomerDisputePortal() {
                 </div>
               </div>
 
-              {/* 1-Tap Hackathon Presets */}
+              {/* CBN Regulatory Compliance & Protections */}
               <div className="portal-panel">
                 <div className="portal-panel-head">
-                  <Zap size={18} />
-                  <h3>⚡ 1-Tap Hackathon Presets</h3>
+                  <ShieldCheck size={18} />
+                  <h3>CBN Regulatory Protection</h3>
                 </div>
                 <p className="portal-panel-desc">
-                  Click any scenario below to auto-fill the complaint form instantly:
+                  All disputes logged via verified banking channels are bound by Central Bank of Nigeria Consumer Protection Regulations:
                 </p>
-                <div className="quick-scenarios-grid">
-                  {QUICK_SCENARIOS.map((sc) => (
-                    <button
-                      key={sc.label}
-                      type="button"
-                      onClick={() => applyScenario(sc)}
-                      className="quick-scenario-btn"
-                    >
-                      <div className="scenario-label">{sc.label}</div>
-                      <div className="scenario-meta">
-                        <span>₦{Number(sc.amount).toLocaleString()}</span>
-                        <span>•</span>
-                        <span>{sc.slaHours}h SLA</span>
-                      </div>
-                    </button>
-                  ))}
+                <div className="compliance-features-list">
+                  <div className="compliance-feature-item">
+                    <span className="compliance-dot" />
+                    <div>
+                      <strong>Cryptographic Ingestion Hash</strong>
+                      <small>Generates an immutable audit reference (CMP-YYYY-XXXX).</small>
+                    </div>
+                  </div>
+                  <div className="compliance-feature-item">
+                    <span className="compliance-dot" />
+                    <div>
+                      <strong>Regulated SLA Clocks</strong>
+                      <small>12h for unauthorized charges, 24h for ATM/cards, 48h for transfers.</small>
+                    </div>
+                  </div>
+                  <div className="compliance-feature-item">
+                    <span className="compliance-dot" />
+                    <div>
+                      <strong>Maker-Checker Verification</strong>
+                      <small>Mandatory supervisor verification before any case is closed.</small>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -476,12 +384,12 @@ export function CustomerDisputePortal() {
                   </div>
                   <div className="portal-row-2">
                     <label className="field">
-                      <span className="field-label">Your Name (or Judge Name) *</span>
+                      <span className="field-label">Your Full Name *</span>
                       <input
                         type="text"
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="e.g. Judge Babatunde"
+                        placeholder="e.g. Babatunde Adeleke"
                         required
                         className="field-input"
                       />
