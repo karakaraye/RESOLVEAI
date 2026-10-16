@@ -192,15 +192,17 @@ export function CustomerDisputePortal() {
       <header className="portal-topbar">
         <div className="portal-container portal-topbar-inner">
           <div className="portal-brand">
-            <BrandMark size={32} />
-            <div>
+            <BrandMark size={30} />
+            <div className="portal-brand-text">
               <strong>Apex Commercial Bank</strong>
-              <small>Customer Resolution &amp; Omnichannel Dispute Gateway</small>
+              <small className="portal-subtitle-desktop">Customer Resolution &amp; Omnichannel Dispute Gateway</small>
+              <small className="portal-subtitle-mobile">Dispute Resolution Gateway</small>
             </div>
           </div>
           <div className="portal-status-badge">
             <span className="live-pulse-dot" />
-            <span>RESOLVEIQ Ingestion Gateway: <strong>LIVE</strong></span>
+            <span className="portal-badge-text-desktop">RESOLVEIQ Ingestion: </span>
+            <strong>LIVE</strong>
           </div>
         </div>
       </header>
