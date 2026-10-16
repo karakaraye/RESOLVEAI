@@ -2,7 +2,7 @@ import { apiFetch, query } from "./client";
 import { demoStore, type IngestComplaintInput } from "../demo-store";
 import type {
   Assignee, Category, CommunicationComplianceReport, ComplaintDetail, ComplaintSummary, CustomerCommunicationItem, DataSource, ForwardingOptions, Handoff, HandoffCounts, HandoffSummary,
-  NotificationPage, NotificationPreference, Page, Priority, ReportResult, ReportType, Session, WorkspaceSummary,
+  NextAction, NotificationPage, NotificationPreference, Page, Priority, ReportResult, ReportType, Session, WorkspaceSummary,
 } from "./types";
 
 export type ComplaintQuery = {
@@ -53,12 +53,12 @@ export const api = {
         overdue: items.filter((i) => i.overdue).length,
         resolvedVerified: items.filter((i) => i.status === "RESOLVED").length,
       };
+      const nextActions: NextAction[] = [];
+      if (counts.new > 0) nextActions.push({ kind: "REVIEW_NEW", count: counts.new });
+      if (counts.inProgress > 0) nextActions.push({ kind: "INVESTIGATE", count: counts.inProgress });
       return {
         counts,
-        nextActions: [
-          { kind: "REVIEW_NEW", count: counts.new },
-          { kind: "INVESTIGATE", count: counts.inProgress },
-        ].filter((a) => a.count > 0),
+        nextActions,
         generatedAt: new Date().toISOString(),
       };
     }

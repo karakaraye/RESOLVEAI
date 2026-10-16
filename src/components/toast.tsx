@@ -1,9 +1,9 @@
 "use client";
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
-import { CheckCircle2, Info, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
 
-type Toast = { id: number; message: string; tone: "success" | "info" };
+type Toast = { id: number; message: string; tone: "success" | "info" | "error" };
 const ToastContext = createContext<(message: string, tone?: Toast["tone"]) => void>(() => {});
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -30,7 +30,13 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
   }, [toast.id, onDismiss]);
   return (
     <div className={`toast toast-${toast.tone}`}>
-      {toast.tone === "success" ? <CheckCircle2 size={16} aria-hidden="true" /> : <Info size={16} aria-hidden="true" />}
+      {toast.tone === "success" ? (
+        <CheckCircle2 size={16} aria-hidden="true" />
+      ) : toast.tone === "error" ? (
+        <AlertCircle size={16} aria-hidden="true" />
+      ) : (
+        <Info size={16} aria-hidden="true" />
+      )}
       <span>{toast.message}</span>
       <button type="button" className="icon-button" aria-label="Dismiss message" onClick={() => onDismiss(toast.id)}><X size={14} aria-hidden="true" /></button>
     </div>
