@@ -39,7 +39,7 @@ const CHANNELS: ChannelConfig[] = [
     name: "Mobile App",
     sourceLabel: "Apex Bank Mobile App (v4.2)",
     icon: Smartphone,
-    description: "In-app self-service dispute ticket from retail mobile banking app",
+    description: "Self-service complaint ticket logged from customer's mobile banking app",
     badge: "Most Common",
     accent: "oklch(52% 0.23 26)",
   },
@@ -48,7 +48,7 @@ const CHANNELS: ChannelConfig[] = [
     name: "Inbound Email",
     sourceLabel: "Email to complaints@apexbank.ng",
     icon: Mail,
-    description: "Inbound email parsed by RESOLVEIQ intelligent OCR & mail parser",
+    description: "Customer complaint email parsed by RESOLVEIQ intelligent mailbox parser",
     badge: "Automated OCR",
     accent: "oklch(48% 0.18 245)",
   },
@@ -57,7 +57,7 @@ const CHANNELS: ChannelConfig[] = [
     name: "WhatsApp Bot",
     sourceLabel: "Apex Bank Verified WhatsApp (+234 800 2739)",
     icon: MessageSquare,
-    description: "Conversational dispute intake via bank's verified WhatsApp business bot",
+    description: "Conversational dispute & grievance intake via bank's verified WhatsApp bot",
     badge: "Chatbot AI",
     accent: "oklch(55% 0.19 148)",
   },
@@ -66,7 +66,7 @@ const CHANNELS: ChannelConfig[] = [
     name: "Web Portal",
     sourceLabel: "Online Banking Web Self-Service",
     icon: Landmark,
-    description: "Consumer dispute form submitted through desktop internet banking",
+    description: "Customer dispute form submitted through desktop internet banking portal",
     badge: "Internet Banking",
     accent: "oklch(50% 0.18 200)",
   },
@@ -75,24 +75,128 @@ const CHANNELS: ChannelConfig[] = [
     name: "ATM Terminal Alert",
     sourceLabel: "ATM Switch Telemetry / Terminal Auto-Log",
     icon: CreditCard,
-    description: "Automated failure signal from Interswitch / Postilion cash dispenser sensor",
+    description: "Dispense failure telemetry or direct dispute report logged at ATM terminal",
     badge: "Switch Telemetry",
     accent: "oklch(48% 0.2 45)",
   },
   {
     id: "pos_terminal",
-    name: "POS Terminal",
-    sourceLabel: "Merchant POS Settlement Dispute",
+    name: "POS / Agent Desk",
+    sourceLabel: "Merchant POS & Branch Ingestion Desk",
     icon: Zap,
-    description: "Cardholder dispute logged from merchant POS double debit receipt",
-    badge: "Merchant Terminal",
+    description: "Dispute logged at merchant POS terminal, branch desk, or agency banking point",
+    badge: "Merchant & Agent",
     accent: "oklch(46% 0.22 300)",
+  },
+];
+
+export interface ComplaintCategoryDef {
+  code: string;
+  label: string;
+  badge: string;
+  description: string;
+  isFinancial: boolean;
+  defaultPriority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  slaHours: number;
+  placeholderSummary: string;
+  placeholderNarrative: string;
+}
+
+export const COMPLAINT_CATEGORIES: ComplaintCategoryDef[] = [
+  {
+    code: "TRANSFERS",
+    label: "Electronic Funds Transfer (NIP / Interbank / Wire)",
+    badge: "Leading · Transfers",
+    description: "Interbank or intrabank transfer debited without credit to beneficiary, or stuck in pending state",
+    isFinancial: true,
+    defaultPriority: "HIGH",
+    slaHours: 24,
+    placeholderSummary: "e.g. ₦50,000 NIP transfer debited but beneficiary not credited after 24h",
+    placeholderNarrative: "State recipient bank, beneficiary account name and number, time of transfer, and session ID if available...",
+  },
+  {
+    code: "CARDS_ATM",
+    label: "Card, ATM & POS Terminal Disputes",
+    badge: "Cards & Hardware",
+    description: "ATM cash dispense failure, merchant POS double debit, or declined payment with debit alert",
+    isFinancial: true,
+    defaultPriority: "HIGH",
+    slaHours: 24,
+    placeholderSummary: "e.g. ATM debited ₦30,000 without dispensing cash",
+    placeholderNarrative: "Specify ATM/POS terminal location, date and time, and if an error receipt was issued...",
+  },
+  {
+    code: "ACCOUNT_ACCESS",
+    label: "Account Maintenance, KYC & Restrictions",
+    badge: "Account & KYC",
+    description: "Account unexpectedly frozen or Post-No-Debit (PND), BVN/NIN linkage issues, or dormant account delay",
+    isFinancial: false,
+    defaultPriority: "HIGH",
+    slaHours: 24,
+    placeholderSummary: "e.g. Post-No-Debit restriction placed on business account despite verified documents",
+    placeholderNarrative: "Describe when the restriction was noticed, documents submitted to the branch, and branch visited...",
+  },
+  {
+    code: "BILLING",
+    label: "Excess Charges & Unexplained Fees",
+    badge: "Billing & Fees",
+    description: "Unexplained ledger debits, excessive SMS alert charges, electronic transfer levy, or maintenance fee errors",
+    isFinancial: true,
+    defaultPriority: "MEDIUM",
+    slaHours: 48,
+    placeholderSummary: "e.g. Account maintenance fee debited three times within the same billing month",
+    placeholderNarrative: "Detail the exact charge entries from your statement, dates debited, and why they appear erroneous...",
+  },
+  {
+    code: "FRAUD_SECURITY",
+    label: "Fraud, Phishing & Unauthorized Activity",
+    badge: "Security & Fraud",
+    description: "Unrecognized debit alerts, suspected account takeover, compromised card details, or suspicious phishing activity",
+    isFinancial: true,
+    defaultPriority: "CRITICAL",
+    slaHours: 12,
+    placeholderSummary: "e.g. Unauthorized card charge of ₦85,000 received while physical card is with me",
+    placeholderNarrative: "State when alerts were received, if you have blocked the card, and any suspicious SMS or calls received...",
+  },
+  {
+    code: "MOBILE_APP",
+    label: "Mobile App, Internet Banking & OTP Issues",
+    badge: "Digital Channels",
+    description: "App login failures, biometric/face ID errors, OTP not delivering, token generator sync issues, or server timeouts",
+    isFinancial: false,
+    defaultPriority: "MEDIUM",
+    slaHours: 24,
+    placeholderSummary: "e.g. OTP SMS not delivering, preventing mobile app authorization",
+    placeholderNarrative: "Specify your device model, telecom provider (MTN/Airtel/Glo), and the exact error message displayed...",
+  },
+  {
+    code: "LOANS_CREDIT",
+    label: "Loan Repayment & Credit Bureau Records",
+    badge: "Loans & Credit",
+    description: "Loan deduction deducted twice, wrong overdue status on credit bureau (CRC/FirstCentral), or delayed release",
+    isFinancial: true,
+    defaultPriority: "HIGH",
+    slaHours: 48,
+    placeholderSummary: "e.g. Monthly loan repayment debited twice from salary account",
+    placeholderNarrative: "Provide loan account reference, expected monthly deduction amount, and dates of the duplicated entries...",
+  },
+  {
+    code: "SERVICE_QUALITY",
+    label: "Branch Service & Staff Conduct",
+    badge: "Branch Service",
+    description: "Excessive branch waiting queues, unprofessional customer desk conduct, delayed cheque clearing, or unaddressed queries",
+    isFinancial: false,
+    defaultPriority: "LOW",
+    slaHours: 72,
+    placeholderSummary: "e.g. 3-hour delay at branch customer desk with unhelpful assistance for cheque deposit",
+    placeholderNarrative: "Specify the exact bank branch location, date, time of visit, and specific service failure encountered...",
   },
 ];
 
 export function CustomerDisputePortal() {
   const toast = useToast();
   const [activeChannel, setActiveChannel] = useState<ChannelId>("mobile_app");
+  const [categoryCode, setCategoryCode] = useState<string>("TRANSFERS");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -101,39 +205,43 @@ export function CustomerDisputePortal() {
   const [transactionRef, setTransactionRef] = useState("");
   const [summary, setSummary] = useState("");
   const [narrative, setNarrative] = useState("");
-  const [categoryCode, setCategoryCode] = useState("CARDS_ATM");
   const [submitting, setSubmitting] = useState(false);
   const [submittedData, setSubmittedData] = useState<{
     reference: string;
     complaintId: string;
     channel: string;
+    categoryLabel: string;
     slaHours: number;
     submittedAt: string;
   } | null>(null);
 
   const currentChannelConfig = CHANNELS.find((c) => c.id === activeChannel) || CHANNELS[0];
+  const currentCategory = COMPLAINT_CATEGORIES.find((c) => c.code === categoryCode) || COMPLAINT_CATEGORIES[0];
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!summary.trim() || !narrative.trim()) {
-      toast("Please provide both an issue summary and description.", "error");
+      toast("Please provide both an issue headline and description.", "error");
       return;
     }
 
     setSubmitting(true);
     try {
-      const priority = amount && Number(amount) >= 100000 ? "CRITICAL" : "HIGH";
-      const slaHours = priority === "CRITICAL" ? 12 : 24;
+      const priority =
+        currentCategory.defaultPriority === "CRITICAL" || (amount && Number(amount) >= 100000)
+          ? "CRITICAL"
+          : currentCategory.defaultPriority;
+      const slaHours = priority === "CRITICAL" ? 12 : currentCategory.slaHours;
 
       const res = await api.ingestComplaint({
-        customerName: customerName.trim() || "Hackathon Attendee",
+        customerName: customerName.trim() || "Bank Customer",
         customerReference: `CUST-LIVE-${Math.floor(100000 + Math.random() * 900000)}`,
         customerPhone: customerPhone.trim() || "+234 800 000 0000",
-        customerEmail: customerEmail.trim() || "attendee@hackathon.ng",
+        customerEmail: customerEmail.trim() || "customer@apexbank.ng",
         accountNumber: accountNumber.trim() || "0123456789",
         channel: currentChannelConfig.sourceLabel,
-        categoryCode,
-        categoryLabel: categoryCode.replace("_", " "),
+        categoryCode: currentCategory.code,
+        categoryLabel: currentCategory.label,
         priority,
         summary: summary.trim(),
         narrative: narrative.trim(),
@@ -152,7 +260,7 @@ export function CustomerDisputePortal() {
             complaintId: res.complaintId,
             channel: currentChannelConfig.name,
             summary: summary.trim(),
-            customerName: customerName.trim() || "Hackathon Attendee",
+            customerName: customerName.trim() || "Bank Customer",
             amount: amount.trim(),
             timestamp: new Date().toISOString(),
           });
@@ -166,6 +274,7 @@ export function CustomerDisputePortal() {
         reference: res.reference,
         complaintId: res.complaintId,
         channel: currentChannelConfig.name,
+        categoryLabel: currentCategory.label,
         slaHours,
         submittedAt: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
       });
@@ -180,6 +289,7 @@ export function CustomerDisputePortal() {
 
   const resetForm = () => {
     setSubmittedData(null);
+    setCategoryCode("TRANSFERS");
     setSummary("");
     setNarrative("");
     setAmount("");
@@ -234,6 +344,10 @@ export function CustomerDisputePortal() {
                 <span className="receipt-value text-danger">Within {submittedData.slaHours} Hours (CBN Guaranteed)</span>
               </div>
               <div className="portal-receipt-item">
+                <span className="receipt-label">Complaint Nature / Category</span>
+                <span className="receipt-value">{submittedData.categoryLabel}</span>
+              </div>
+              <div className="portal-receipt-item">
                 <span className="receipt-label">Inbound Channel</span>
                 <span className="receipt-value">{submittedData.channel}</span>
               </div>
@@ -258,14 +372,14 @@ export function CustomerDisputePortal() {
                   <div className="step-bubble"><Sparkles size={16} /></div>
                   <div className="step-info">
                     <strong>2. Automated AI Triage</strong>
-                    <small>Extracting switch telemetry &amp; classifying fault</small>
+                    <small>Classifying complaint fault &amp; routing to operations</small>
                   </div>
                 </li>
                 <li className="step-pending">
                   <div className="step-bubble"><Clock size={16} /></div>
                   <div className="step-info">
-                    <strong>3. Investigation &amp; Settlement</strong>
-                    <small>Assigned to Switch Operations for reversal</small>
+                    <strong>3. Investigation &amp; Resolution</strong>
+                    <small>Assigned to dedicated resolution unit</small>
                   </div>
                 </li>
               </ol>
@@ -283,7 +397,7 @@ export function CustomerDisputePortal() {
             <div className="portal-success-actions">
               <button type="button" onClick={resetForm} className="button button-secondary">
                 <RefreshCw size={15} />
-                <span>Submit Another Test Dispute</span>
+                <span>Submit Another Dispute</span>
               </button>
               <Link href={`/complaints`} className="button button-primary">
                 <span>View On Central Operator Desk</span>
@@ -294,15 +408,15 @@ export function CustomerDisputePortal() {
         ) : (
           /* Intake Form */
           <div className="portal-grid">
-            {/* Left: Interactive Channel Selector & Presets */}
+            {/* Left: Interactive Channel Selector & Regulatory Assurance */}
             <div className="portal-sidebar-col">
               <div className="portal-panel">
                 <div className="portal-panel-head">
                   <Smartphone size={18} />
-                  <h3>1. Select Inbound Banking Channel</h3>
+                  <h3>1. Inbound Touchpoint Channel</h3>
                 </div>
                 <p className="portal-panel-desc">
-                  Simulate how customer complaints enter the bank across various touchpoints:
+                  Select the channel through which this customer complaint was received:
                 </p>
                 <div className="channel-select-list">
                   {CHANNELS.map((ch) => {
@@ -338,7 +452,7 @@ export function CustomerDisputePortal() {
                   <h3>CBN Regulatory Protection</h3>
                 </div>
                 <p className="portal-panel-desc">
-                  All disputes logged via verified banking channels are bound by Central Bank of Nigeria Consumer Protection Regulations:
+                  All banking grievances logged through verified channels adhere to Central Bank consumer protection directives:
                 </p>
                 <div className="compliance-features-list">
                   <div className="compliance-feature-item">
@@ -351,38 +465,67 @@ export function CustomerDisputePortal() {
                   <div className="compliance-feature-item">
                     <span className="compliance-dot" />
                     <div>
-                      <strong>Regulated SLA Clocks</strong>
-                      <small>12h for unauthorized charges, 24h for ATM/cards, 48h for transfers.</small>
+                      <strong>Mandated SLA Clocks</strong>
+                      <small>12h for fraud alerts, 24h for transfers/cards, 48-72h for billing &amp; service.</small>
                     </div>
                   </div>
                   <div className="compliance-feature-item">
                     <span className="compliance-dot" />
                     <div>
                       <strong>Maker-Checker Verification</strong>
-                      <small>Mandatory supervisor verification before any case is closed.</small>
+                      <small>Mandatory supervisor sign-off before any complaint is resolved.</small>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right: Channel-Styled Complaint Form */}
+            {/* Right: Omnichannel Grievance Intake Form */}
             <div className="portal-form-col">
               <div className="portal-form-card">
                 <div className="portal-form-header">
                   <div className="portal-channel-banner">
                     <currentChannelConfig.icon size={22} style={{ color: currentChannelConfig.accent }} />
                     <div>
-                      <h3>{currentChannelConfig.name} Intake Gateway</h3>
+                      <h3>{currentChannelConfig.name} Ingestion Gateway</h3>
                       <p>{currentChannelConfig.sourceLabel}</p>
                     </div>
                   </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="portal-form-body">
-                  {/* Customer Identity */}
+                  {/* 1. Complaint Nature / Category Selection */}
                   <div className="form-section-title">
-                    <span>Customer &amp; Account Details</span>
+                    <span>1. Complaint Nature &amp; Classification</span>
+                  </div>
+                  <div className="portal-category-group">
+                    <label className="field">
+                      <span className="field-label">Complaint Category *</span>
+                      <select
+                        value={categoryCode}
+                        onChange={(e) => setCategoryCode(e.target.value)}
+                        className="field-input field-select"
+                        required
+                      >
+                        {COMPLAINT_CATEGORIES.map((cat) => (
+                          <option key={cat.code} value={cat.code}>
+                            {cat.label} ({cat.slaHours}h SLA)
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="category-description-hint">
+                      <div className="category-hint-header">
+                        <span className="category-badge-pill">{currentCategory.badge}</span>
+                        <span className="category-sla-pill">{currentCategory.slaHours}h Regulatory SLA</span>
+                      </div>
+                      <p>{currentCategory.description}</p>
+                    </div>
+                  </div>
+
+                  {/* 2. Customer Identity */}
+                  <div className="form-section-title" style={{ marginTop: "14px" }}>
+                    <span>2. Customer &amp; Account Details</span>
                   </div>
                   <div className="portal-row-2">
                     <label className="field">
@@ -403,6 +546,7 @@ export function CustomerDisputePortal() {
                         value={accountNumber}
                         onChange={(e) => setAccountNumber(e.target.value)}
                         placeholder="e.g. 0123456789 (10 digits)"
+                        required
                         className="field-input mono"
                       />
                     </label>
@@ -431,36 +575,45 @@ export function CustomerDisputePortal() {
                     </label>
                   </div>
 
-                  {/* Transaction Information */}
-                  <div className="form-section-title" style={{ marginTop: "12px" }}>
-                    <span>Dispute Transaction Particulars</span>
+                  {/* 3. Transaction Details (Optional / Category Aware) */}
+                  <div className="form-section-title" style={{ marginTop: "14px" }}>
+                    <span>
+                      3. Transaction Particulars{" "}
+                      <small className="optional-tag">
+                        {currentCategory.isFinancial ? "(Optional if available)" : "(Optional / Only if monetary loss occurred)"}
+                      </small>
+                    </span>
                   </div>
                   <div className="portal-row-2">
                     <label className="field">
-                      <span className="field-label">Disputed Amount (NGN ₦)</span>
+                      <span className="field-label">
+                        {currentCategory.isFinancial ? "Disputed Amount (NGN ₦)" : "Associated Amount (NGN ₦)"}
+                      </span>
                       <input
                         type="number"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
-                        placeholder="50000"
+                        placeholder={currentCategory.isFinancial ? "e.g. 50000 (Optional)" : "Leave blank if not applicable"}
                         className="field-input mono"
                       />
                     </label>
                     <label className="field">
-                      <span className="field-label">Session ID / Reference</span>
+                      <span className="field-label">
+                        {currentCategory.isFinancial ? "Session ID / Transaction Ref" : "Reference / Ticket Number"}
+                      </span>
                       <input
                         type="text"
                         value={transactionRef}
                         onChange={(e) => setTransactionRef(e.target.value)}
-                        placeholder="e.g. ATM-VI-004-DISP-991"
+                        placeholder={currentCategory.isFinancial ? "e.g. NIP-990023 or ATM-VI-004" : "e.g. Branch ticket or Loan Ref"}
                         className="field-input mono"
                       />
                     </label>
                   </div>
 
-                  {/* Narrative */}
-                  <div className="form-section-title" style={{ marginTop: "12px" }}>
-                    <span>Complaint Narrative</span>
+                  {/* 4. Narrative */}
+                  <div className="form-section-title" style={{ marginTop: "14px" }}>
+                    <span>4. Complaint Narrative</span>
                   </div>
                   <label className="field">
                     <span className="field-label">Issue Headline / Subject *</span>
@@ -468,7 +621,7 @@ export function CustomerDisputePortal() {
                       type="text"
                       value={summary}
                       onChange={(e) => setSummary(e.target.value)}
-                      placeholder="e.g. ATM debited ₦50,000 without dispensing cash"
+                      placeholder={currentCategory.placeholderSummary}
                       required
                       className="field-input"
                     />
@@ -480,7 +633,7 @@ export function CustomerDisputePortal() {
                       rows={4}
                       value={narrative}
                       onChange={(e) => setNarrative(e.target.value)}
-                      placeholder="Describe what occurred, terminal location, error messages on screen, or beneficiary details..."
+                      placeholder={currentCategory.placeholderNarrative}
                       required
                       className="field-input field-textarea"
                     />
@@ -504,7 +657,7 @@ export function CustomerDisputePortal() {
                       ) : (
                         <>
                           <Send size={16} />
-                          <span>Submit Incident via {currentChannelConfig.name}</span>
+                          <span>Submit Grievance via {currentChannelConfig.name}</span>
                         </>
                       )}
                     </button>

@@ -533,6 +533,13 @@ class ComplaintIngestionService:
                 tenant__isnull=True,
                 code=category_code
             ).first()
+            if not category:
+                category_label = payload.get("category_label") or payload.get("categoryLabel") or category_code.replace("_", " ").title()
+                category, _ = ComplaintCategory.objects.get_or_create(
+                    tenant=tenant,
+                    code=category_code,
+                    defaults={"label": category_label, "is_active": True}
+                )
 
         source_channel = payload.get("source_channel") or payload.get("channel", "Contact centre feed")
         summary = payload.get("summary") or payload.get("title", "Customer Incident Report")
