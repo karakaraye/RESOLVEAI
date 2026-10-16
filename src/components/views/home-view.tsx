@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronRight, Plus } from "lucide-react";
 import { api } from "@/lib/api/endpoints";
 import type { ApiError } from "@/lib/api/client";
 import type { ReportType } from "@/lib/api/types";
@@ -28,7 +28,19 @@ export function HomeView() {
   const greeting = hour === null ? "Good afternoon" : hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const today = now === null ? " " : new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: format.timeZone }).format(now);
 
-  const header = <PageHeader eyebrow={today} title={`${greeting}, ${greetingName}`} description="Here’s what needs your attention." />;
+  const header = (
+    <PageHeader
+      eyebrow={today}
+      title={`${greeting}, ${greetingName}`}
+      description="Here’s what needs your attention."
+      actions={
+        <Link href="/complaints/new" className="button button-primary">
+          <Plus size={16} aria-hidden="true" />
+          <span>Log Complaint</span>
+        </Link>
+      }
+    />
+  );
 
   if (summary.state === "error" && blocking.includes(summary.error.kind)) {
     return (
