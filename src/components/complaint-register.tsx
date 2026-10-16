@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Inbox, SearchX, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Inbox, QrCode, Radio, SearchX, Sparkles, X } from "lucide-react";
 import { api, ComplaintQuery } from "@/lib/api/endpoints";
 import type { ComplaintSummary } from "@/lib/api/types";
 import { actionLabels, actionOrder, actionParam, priorityMeta, priorityOrder, statusMeta, statusOrder } from "@/lib/labels";
@@ -9,6 +10,8 @@ import { useFormat } from "@/lib/session";
 import { useResource } from "@/lib/use-resource";
 import { useUrlState } from "@/lib/use-url-state";
 import { EmptyState, OverdueBadge, OverflowMenu, Pagination, PriorityTag, ServiceState, SkeletonRows, StatusBadge } from "./ui";
+import { AudienceQrModal } from "./qr-modal";
+import { playInboundChime } from "@/lib/audio-chime";
 
 const receivedOptions = [{ value: "today", label: "Today" }, { value: "7d", label: "Last 7 days" }, { value: "30d", label: "Last 30 days" }, { value: "90d", label: "Last 90 days" }];
 const dueOptions = [{ value: "overdue", label: "Overdue" }, { value: "today", label: "Due today" }, { value: "soon", label: "Due within 24 hours" }, { value: "week", label: "Due this week" }, { value: "none", label: "No due date" }];
@@ -30,9 +33,21 @@ export function rowMenuItems(item: ComplaintSummary, from?: string) {
   ];
 }
 
+interface InboundAlert {
+  reference: string;
+  summary: string;
+  channel: string;
+  customer?: string;
+}
+
 export function ComplaintRegister({ scope, searchLabel }: { scope: "all" | "mine"; searchLabel: string }) {
   const { params, set, here } = useUrlState();
   const format = useFormat();
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [latestInboundAlert, setLatestInboundAlert] = useState<InboundAlert | null>(null);
+  const knownRefsRef = useRef<Set<string>>(new Set());
+  const initialLoadRef = useRef(true);
+
   const query: ComplaintQuery = {
     scope,
     q: params.get("q") ?? undefined,
@@ -50,12 +65,115 @@ export function ComplaintRegister({ scope, searchLabel }: { scope: "all" | "mine
   const filtered = Boolean(query.q || query.status || query.priority || query.category || query.due || query.received);
   const clear = () => set({ q: null, status: null, priority: null, category: null, due: null, received: null });
 
+  // Real-time background sync & cross-tab ingestion listener
+  useEffect(() => {
+    const timer = setInterval(() => {
+      complaints.reload();
+    }, 3500);
+
+    const handleUpdate = () => {
+      complaints.reload();
+    };
+
+    window.addEventListener("resolveiq-complaints-updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel("resolveiq_live_feed");
+      bc.onmessage = (event) => {
+        if (event.data && event.data.type === "NEW_COMPLAINT_INGESTED") {
+          playInboundChime();
+          setLatestInboundAlert({
+            reference: event.data.reference,
+            summary: event.data.summary,
+            channel: event.data.channel,
+            customer: event.data.customerName,
+          });
+          complaints.reload();
+        }
+      };
+    } catch {
+      // BroadcastChannel unsupported in some environments
+    }
+
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("resolveiq-complaints-updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+      if (bc) bc.close();
+    };
+  }, [complaints]);
+
+  // Detect newly arrived complaints on reload and trigger audio chime + alert
+  useEffect(() => {
+    if (complaints.state === "ready" && complaints.data.items) {
+      const items = complaints.data.items;
+      if (initialLoadRef.current) {
+        items.forEach((item) => knownRefsRef.current.add(item.reference));
+        initialLoadRef.current = false;
+        return;
+      }
+
+      const newArrival = items.find((item) => !knownRefsRef.current.has(item.reference));
+      if (newArrival) {
+        items.forEach((item) => knownRefsRef.current.add(item.reference));
+        playInboundChime();
+        setLatestInboundAlert({
+          reference: newArrival.reference,
+          summary: newArrival.summary,
+          channel: (newArrival as unknown as { sourceChannel?: string }).sourceChannel || newArrival.category?.label || "Inbound Feed",
+          customer: newArrival.customerReference,
+        });
+      }
+    }
+  }, [complaints.state, complaints.data]);
+
+  // Auto-dismiss alert banner after 9 seconds
+  useEffect(() => {
+    if (!latestInboundAlert) return;
+    const timer = setTimeout(() => {
+      setLatestInboundAlert(null);
+    }, 9000);
+    return () => clearTimeout(timer);
+  }, [latestInboundAlert]);
+
   if (complaints.state === "error" && !filtered && ["not-configured", "unauthorized", "forbidden"].includes(complaints.error.kind)) {
     return <section className="panel"><ServiceState error={complaints.error} onRetry={complaints.reload} /></section>;
   }
 
   return (
     <section className="panel register" aria-label={scope === "mine" ? "Cases assigned to you" : "Complaints"}>
+      {/* Live Inbound Alert Toast Banner */}
+      {latestInboundAlert && (
+        <div className="live-inbound-toast-banner" role="alert">
+          <div className="live-inbound-left">
+            <span className="live-pulse-badge">
+              <span className="live-pulse-dot" /> LIVE INTAKE
+            </span>
+            <span className="live-channel-pill">{latestInboundAlert.channel}</span>
+            <strong className="live-inbound-ref mono">{latestInboundAlert.reference}</strong>
+            <span className="live-inbound-summary">{latestInboundAlert.summary}</span>
+          </div>
+          <div className="live-inbound-right">
+            <Link
+              href={`/complaints/${encodeURIComponent(latestInboundAlert.reference)}`}
+              className="button button-small button-primary"
+            >
+              Inspect Case
+            </Link>
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => setLatestInboundAlert(null)}
+              aria-label="Dismiss notification"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="filters" role="group" aria-label="Filter complaints">
         <SearchField value={query.q ?? ""} label={searchLabel} onCommit={(q) => set({ q })} />
         <Select label="Status" value={query.status} onChange={(status) => set({ status })} allLabel="All statuses" options={statusOrder.map((s) => ({ value: s, label: statusMeta[s].label }))} />
@@ -66,7 +184,22 @@ export function ComplaintRegister({ scope, searchLabel }: { scope: "all" | "mine
           ? <Select label="Due date" value={query.due} onChange={(due) => set({ due })} allLabel="Any due date" options={dueOptions} />
           : <Select label="Received" value={query.received} onChange={(received) => set({ received })} allLabel="Any time" options={receivedOptions} />}
         {filtered && <button type="button" className="button button-ghost button-small clear-filters" onClick={clear}><X size={14} aria-hidden="true" />Clear</button>}
+
+        <div className="register-actions-right">
+          <button
+            type="button"
+            onClick={() => setShowQrModal(true)}
+            className="button button-secondary button-small qr-live-btn"
+            title="Invite judges & audience to submit complaints from their phones via QR code"
+          >
+            <QrCode size={15} />
+            <span className="qr-live-label">Audience Live Portal</span>
+            <span className="live-indicator-dot" />
+          </button>
+        </div>
       </div>
+
+      <AudienceQrModal isOpen={showQrModal} onClose={() => setShowQrModal(false)} />
 
       {complaints.state === "loading" && <SkeletonRows label="Loading complaints" />}
       {complaints.state === "error" && <ServiceState error={complaints.error} onRetry={complaints.reload} compact />}

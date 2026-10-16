@@ -221,6 +221,24 @@ function writeStorage(items: ComplaintDetail[]) {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     window.dispatchEvent(new Event(EVENT_NAME));
+    try {
+      const bc = new BroadcastChannel("resolveiq_live_feed");
+      const latest = items[0];
+      if (latest) {
+        bc.postMessage({
+          type: "NEW_COMPLAINT_INGESTED",
+          reference: latest.reference,
+          complaintId: latest.id,
+          channel: latest.sourceChannel,
+          summary: latest.summary,
+          customerName: latest.customerReference,
+          timestamp: new Date().toISOString(),
+        });
+      }
+      bc.close();
+    } catch {
+      // BroadcastChannel unavailable
+    }
   } catch {
     // Storage quota or blocked
   }

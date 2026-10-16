@@ -504,11 +504,12 @@ class ComplaintIngestionService:
 
         # Extract payload attributes with validation
         cust_number = payload.get("customer_number") or payload.get("customerReference") or f"CUST-{uuid.uuid4().hex[:6].upper()}"
-        first_name = payload.get("customer_first_name", "Valued")
-        last_name = payload.get("customer_last_name", "Customer")
-        email = payload.get("customer_email")
-        phone = payload.get("customer_phone")
-        account_number = payload.get("account_number")
+        full_name = (payload.get("customerName") or "").strip().split(" ", 1)
+        first_name = payload.get("customer_first_name") or (full_name[0] if full_name and full_name[0] else "Valued")
+        last_name = payload.get("customer_last_name") or (full_name[1] if len(full_name) > 1 else "Customer")
+        email = payload.get("customer_email") or payload.get("customerEmail")
+        phone = payload.get("customer_phone") or payload.get("customerPhone")
+        account_number = payload.get("account_number") or payload.get("accountNumber")
 
         customer, _ = Customer.objects.get_or_create(
             tenant=tenant,

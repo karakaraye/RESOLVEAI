@@ -4,12 +4,14 @@ from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import HasTenantAccess, RequirePermission
 from apps.accounts.models import User
 from apps.common.services import IdempotentAPIViewMixin
+from apps.tenants.models import Tenant
 from .models import Complaint, ComplaintCategory
 from .serializers import (
     CategorySerializer,
@@ -386,12 +388,20 @@ class WorkspaceSummaryView(APIView):
 class IngestionEventsView(APIView):
     """
     Idempotent complaint ingestion webhook endpoint for simulated banking channels.
+    Allows external customer portals, webhooks, and simulated channels to ingest events.
     POST /api/v1/ingestion/events
     """
-    permission_classes = [HasTenantAccess]
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        tenant = request.user.tenant
+        if request.user and request.user.is_authenticated and hasattr(request.user, "tenant") and request.user.tenant:
+            tenant = request.user.tenant
+        else:
+            tenant = Tenant.objects.filter(is_active=True).first()
+
+        if not tenant:
+            return Response({"error": "No active tenant configured"}, status=status.HTTP_400_BAD_REQUEST)
+
         event_id = request.data.get("eventId") or request.data.get("external_event_id") or str(uuid.uuid4())
         complaint, created = ComplaintIngestionService.ingest_event(tenant, event_id, request.data)
 
